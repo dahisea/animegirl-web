@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>The Anime Viewer - 动漫观看</title>
+  <meta name="description" content="在线动漫观看平台，提供流畅的观影体验">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="preload" href="https://cdn.jsdmirror.com/npm/hls.js@latest" as="script">
+  <link rel="manifest" href="./manifest.json">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --md-sys-color-primary: #6366f1;
+      --md-sys-color-primary-dark: #4f46e5;
+      --md-sys-color-primary-light: #818cf8;
+      --md-sys-color-on-primary: #ffffff;
+      --md-sys-color-secondary: #64748b;
+      --md-sys-color-on-secondary: #ffffff;
+      --md-sys-color-surface: #ffffff;
+      --md-sys-color-on-surface: #1e293b;
+      --md-sys-color-surface-variant: #f1f5f9;
+      --md-sys-color-on-surface-variant: #64748b;
+      --md-sys-color-background: #f8fafc;
+      --md-sys-color-error: #ef4444;
+      --md-sys-color-success: #10b981;
+      --md-sys-color-warning: #f59e0b;
+      
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+      
+      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --md-sys-color-primary: #818cf8;
+        --md-sys-color-primary-dark: #6366f1;
+        --md-sys-color-on-primary: #0f172a;
+        --md-sys-color-surface: #1e293b;
+        --md-sys-color-on-surface: #f1f5f9;
+        --md-sys-color-surface-variant: #334155;
+        --md-sys-color-on-surface-variant: #cbd5e1;
+        --md-sys-color-background: #0f172a;
+      }
+    }
+
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--md-sys-color-background);
+      color: var(--md-sys-color-on-surface);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .top-app-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: var(--md-sys-color-surface);
+      color: var(--md-sys-color-on-surface);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .top-app-bar h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-left: 0.75rem;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .icon-button {
+      background: none;
+      border: none;
+      color: var(--md-sys-color-on-surface);
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    .icon-button:hover,
+    .icon-button:focus {
+      background: var(--md-sys-color-surface-variant);
+      outline: none;
+    }
+
+    .icon-button:active {
+      transform: scale(0.95);
+    }
+
+    /* 修复搜索区域 */
+    .search-container {
+      margin-top: 80px;
+      padding: 1rem;
+      max-width: 64rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .search-field {
+      position: relative;
+      background: var(--md-sys-color-surface);
+      border-radius: 28px;
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      box-shadow: var(--shadow-md);
+      border: 2px solid transparent;
+      transition: all var(--transition-normal);
+      gap: 0.75rem;
+    }
+
+    .search-field:focus-within {
+      border-color: var(--md-sys-color-primary);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .search-field .search-icon {
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .search-field input {
+      flex: 1;
+      border: none;
+      background: none;
+      outline: none;
+      font-size: 1rem;
+      padding: 0.5rem 0;
+      color: var(--md-sys-color-on-surface);
+      min-width: 0;
+      font-size: 16px;
+    }
+
+    .search-field input::placeholder {
+      color: var(--md-sys-color-on-surface-variant);
+      opacity: 0.7;
+    }
+
+    .search-field .button {
+      flex-shrink: 0;
+      padding: 0.5rem 1.25rem;
+      margin: 0;
+    }
+
+    .button {
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      border: none;
+      border-radius: var(--radius-lg);
+      padding: 0.625rem 1.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: 44px;
+      white-space: nowrap;
+    }
+
+    .button:hover {
+      background: var(--md-sys-color-primary-dark);
+      box-shadow: var(--shadow-md);
+    }
+
+    .button:active {
+      transform: translateY(1px);
+    }
+
+    .button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* 搜索历史 */
+    .search-history {
+      margin-top: 1rem;
+      background: var(--md-sys-color-surface);
+      border-radius: var(--radius-lg);
+      padding: 1rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-history h3 {
+      font-size: 0.875rem;
+      color: var(--md-sys-color-on-surface-variant);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .history-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .history-chip {
+      background: var(--md-sys-color-surface-variant);
+      color: var(--md-sys-color-on-surface);
+      border: none;
+      border-radius: 16px;
+      padding: 0.375rem 0.75rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .history-chip:hover {
+      background: var(--md-sys-color-primary-light);
+      color: var(--md-sys-color-on-primary);
+    }
+
+    .history-chip .material-icons {
+      font-size: 1rem;
+    }
+
+    /* 移除图片区域的卡片样式 */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+      padding: 1rem;
+      max-width: 64rem;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--md-sys-color-surface);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      transition: all var(--transition-normal);
+      cursor: pointer;
+      padding: 1.25rem;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-xl);
+      transform: translateY(-4px);
+    }
+
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+      color: var(--md-sys-color-on-surface);
+    }
+
+    .card-subtitle {
+      font-size: 0.875rem;
+      color: var(--md-sys-color-on-surface-variant);
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .card-subtitle .material-icons {
+      font-size: 1rem;
+    }
+
+    .card-subtitle span {
+      background: var(--md-sys-color-surface-variant);
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+    }
+
+    .chip-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 1rem;
+      max-width: 64rem;
+      margin: 0 auto 1rem;
+      background: var(--md-sys-color-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 72px;
+      z-index: 100;
+    }
+
+    .chip {
+      background: var(--md-sys-color-surface-variant);
+      color: var(--md-sys-color-on-surface-variant);
+      border: none;
+      border-radius: 9999px;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      font-weight: 500;
+      white-space: nowrap;
+      min-height: 36px;
+    }
+
+    .chip:hover {
+      background: var(--md-sys-color-primary-light);
+      color: var(--md-sys-color-on-primary);
+    }
+
+    .chip.selected {
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+    }
+
+    .list-container {
+      max-width: 64rem;
+      margin: 0 auto;
+      padding: 0 1rem 1rem;
+    }
+
+    .list-item {
+      background: var(--md-sys-color-surface);
+      border-radius: var(--radius-lg);
+      margin-bottom: 0.75rem;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      box-shadow: var(--shadow-sm);
+      gap: 1rem;
+    }
+
+    .list-item:hover {
+      background: var(--md-sys-color-surface-variant);
+      transform: translateX(4px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .list-item .material-icons {
+      color: var(--md-sys-color-primary);
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .list-item-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .list-item-title {
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .list-item-subtitle {
+      font-size: 0.875rem;
+      color: var(--md-sys-color-on-surface-variant);
+    }
+
+    .video-container {
+      max-width: 64rem;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    .video-player {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-xl);
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #000;
+    }
+
+    .video-info-card {
+      background: var(--md-sys-color-surface);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-md);
+    }
+
+    .video-info-card h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      line-height: 1.3;
+    }
+
+    .video-info-card p {
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 0.875rem;
+    }
+
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem;
+      color: var(--md-sys-color-on-surface-variant);
+      min-height: 60vh;
+    }
+
+    .spinner {
+      width: 3rem;
+      height: 3rem;
+      border: 3px solid var(--md-sys-color-surface-variant);
+      border-top-color: var(--md-sys-color-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 1rem;
+      color: var(--md-sys-color-on-surface-variant);
+      text-align: center;
+      min-height: 60vh;
+    }
+
+    .empty-state .material-icons {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.3;
+    }
+
+    .empty-state p {
+      font-size: 1.125rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-state .subtext {
+      font-size: 0.875rem;
+      opacity: 0.7;
+    }
+
+    .fab {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      width: 3.5rem;
+      height: 3.5rem;
+      border-radius: var(--radius-lg);
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      border: none;
+      box-shadow: var(--shadow-lg);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-normal);
+      z-index: 999;
+    }
+
+    .fab:hover {
+      background: var(--md-sys-color-primary-dark);
+      box-shadow: var(--shadow-xl);
+      transform: scale(1.1);
+    }
+
+    .fab.hidden {
+      opacity: 0;
+      transform: scale(0.5);
+      pointer-events: none;
+    }
+
+    .snackbar {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--md-sys-color-surface);
+      color: var(--md-sys-color-on-surface);
+      padding: 0.875rem 1.25rem;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      transition: transform var(--transition-normal);
+      z-index: 2000;
+      max-width: calc(100% - 2rem);
+      width: max-content;
+      border: 1px solid var(--md-sys-color-surface-variant);
+    }
+
+    .snackbar.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .snackbar.error {
+      background: var(--md-sys-color-error);
+      color: white;
+    }
+
+    .snackbar.success {
+      background: var(--md-sys-color-success);
+      color: white;
+    }
+
+    .snackbar.warning {
+      background: var(--md-sys-color-warning);
+      color: white;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 768px) {
+      .search-container {
+        margin-top: 72px;
+        padding: 0.75rem;
+      }
+      
+      .card-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        padding: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="skeleton" style="position: fixed; inset: 0; background: var(--md-sys-color-background); z-index: 2000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+      <div class="spinner"></div>
+      <p style="margin-top: 1rem; color: var(--md-sys-color-on-surface-variant);">加载中...</p>
+    </div>
+  </div>
+
+  <header class="top-app-bar">
+    <button class="icon-button" onclick="goHome()" aria-label="返回首页">
+      <span class="material-icons">home</span>
+    </button>
+    <h1 id="appTitle">Anime Viewer</h1>
+  </header>
+
+  <main id="app">
+    <div id="searchPage">
+      <div class="search-container">
+        <div class="search-field">
+          <span class="material-icons search-icon">search</span>
+          <input type="search" id="searchInput" placeholder="搜索动漫..." 
+                 onkeypress="handleSearchKeypress(event)" 
+                 autocomplete="off">
+          <button class="button" onclick="searchAnime()" id="searchButton">
+            搜索
+          </button>
+        </div>
+        
+        <div id="searchHistory" class="search-history hidden">
+          <h3>
+            搜索历史
+            <button class="icon-button" onclick="clearHistory()" style="min-width: auto; min-height: auto; padding: 0.25rem;">
+              <span class="material-icons" style="font-size: 1.125rem;">delete</span>
+            </button>
+          </h3>
+          <div id="historyChips" class="history-chips"></div>
+        </div>
+      </div>
+      
+      <div id="searchResults" class="card-grid">
+        <div class="empty-state">
+          <span class="material-icons">search</span>
+          <p>输入关键词搜索动漫</p>
+          <p class="subtext">支持中文、日文、英文搜索</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="episodesPage" class="hidden">
+      <div style="margin-top: 80px;">
+        <div id="channelChips" class="chip-container"></div>
+        <div id="episodesList" class="list-container"></div>
+      </div>
+    </div>
+
+    <div id="videoPage" class="hidden">
+      <div class="video-container" style="margin-top: 80px;">
+        <div class="video-player">
+          <video id="videoPlayer" controls playsinline preload="metadata"></video>
+        </div>
+        <div class="video-info-card">
+          <h2 id="videoTitle">正在播放</h2>
+          <p id="videoInfo">加载中...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <button class="fab hidden" onclick="scrollToTop()" id="backToTop">
+    <span class="material-icons">arrow_upward</span>
+  </button>
+
+  <div id="snackbar" class="snackbar"></div>
+
+  <script>
+    const API_BASE = 'https://anigirl.dahi.edu.eu.org';
+    let currentData = {
+      searchResults: [],
+      channels: [],
+      currentAnime: null,
+      currentChannel: 0
+    };
+    let hlsInstance = null;
+    let searchHistory = JSON.parse(localStorage.getItem('animeSearchHistory') || '[]');
+
+    function loadHLS() {
+      return new Promise((resolve, reject) => {
+        if (window.Hls) {
+          resolve(window.Hls);
+          return;
+        }
+        
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdmirror.com/npm/hls.js@latest';
+        script.async = true;
+        script.onload = () => resolve(window.Hls);
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('skeleton').style.display = 'none';
+      }, 500);
+
+      loadHLS().catch(() => console.warn('HLS库加载失败'));
+      handleRoute();
+      window.addEventListener('hashchange', handleRoute);
+      window.addEventListener('scroll', handleScroll);
+      renderSearchHistory();
+    });
+
+    function handleScroll() {
+      const backToTop = document.getElementById('backToTop');
+      if (window.scrollY > 300) {
+        backToTop.classList.remove('hidden');
+      } else {
+        backToTop.classList.add('hidden');
+      }
+    }
+
+    function handleRoute() {
+      const hash = window.location.hash.slice(1);
+      if (!hash) {
+        showSearchPage();
+        return;
+      }
+
+      const parts = hash.split('/');
+      const page = parts[0];
+      const param = parts.slice(1).join('/');
+
+      hideAllPages();
+
+      switch(page) {
+        case 'episodes':
+          if (param) showEpisodesPage(decodeURIComponent(param));
+          break;
+        case 'video':
+          if (param) showVideoPage(decodeURIComponent(param));
+          break;
+        default:
+          showSearchPage();
+      }
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function hideAllPages() {
+      document.getElementById('searchPage').classList.add('hidden');
+      document.getElementById('episodesPage').classList.add('hidden');
+      document.getElementById('videoPage').classList.add('hidden');
+    }
+
+    function showSearchPage() {
+      document.getElementById('searchPage').classList.remove('hidden');
+      document.getElementById('appTitle').textContent = 'Anime Viewer';
+      document.getElementById('backToTop').classList.add('hidden');
+      setTimeout(() => document.getElementById('searchInput')?.focus(), 100);
+    }
+
+    function goHome() {
+      window.location.hash = '';
+    }
+
+    function handleSearchKeypress(event) {
+      if (event.key === 'Enter') {
+        searchAnime();
+      }
+    }
+
+    function addToHistory(keyword) {
+      searchHistory = searchHistory.filter(h => h !== keyword);
+      searchHistory.unshift(keyword);
+      searchHistory = searchHistory.slice(0, 10);
+      localStorage.setItem('animeSearchHistory', JSON.stringify(searchHistory));
+      renderSearchHistory();
+    }
+
+    function renderSearchHistory() {
+      const historyDiv = document.getElementById('searchHistory');
+      const chipsDiv = document.getElementById('historyChips');
+      
+      if (searchHistory.length === 0) {
+        historyDiv.classList.add('hidden');
+        return;
+      }
+
+      historyDiv.classList.remove('hidden');
+      chipsDiv.innerHTML = searchHistory.map(keyword => `
+        <button class="history-chip" onclick="searchFromHistory('${escapeHtml(keyword)}')">
+          <span class="material-icons">history</span>
+          ${escapeHtml(keyword)}
+        </button>
+      `).join('');
+    }
+
+    function searchFromHistory(keyword) {
+      document.getElementById('searchInput').value = keyword;
+      searchAnime();
+    }
+
+    function clearHistory() {
+      if (confirm('确定要清除所有搜索历史吗？')) {
+        searchHistory = [];
+        localStorage.removeItem('animeSearchHistory');
+        renderSearchHistory();
+        showSnackbar('已清除搜索历史', 'success');
+      }
+    }
+
+    async function searchAnime() {
+      const keyword = document.getElementById('searchInput').value.trim();
+      if (!keyword) {
+        showSnackbar('请输入搜索关键词', 'warning');
+        return;
+      }
+
+      const resultsDiv = document.getElementById('searchResults');
+      const searchButton = document.getElementById('searchButton');
+      
+      resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>搜索中...</p></div>';
+      searchButton.disabled = true;
+      searchButton.textContent = '搜索中...';
+
+      try {
+        const response = await fetch(`${API_BASE}/api/search?keyword=${encodeURIComponent(keyword)}`);
+        const data = await response.json();
+
+        if (data.success && data.results && data.results.length > 0) {
+          addToHistory(keyword);
+          currentData.searchResults = data.results;
+          renderSearchResults(data.results);
+          showSnackbar(`找到 ${data.results.length} 个结果`, 'success');
+        } else {
+          resultsDiv.innerHTML = `
+            <div class="empty-state">
+              <span class="material-icons">search_off</span>
+              <p>没有找到相关动漫</p>
+              <p class="subtext">试试其他关键词</p>
+            </div>
+          `;
+          showSnackbar('没有找到相关动漫', 'warning');
+        }
+      } catch (error) {
+        console.error('搜索失败:', error);
+        resultsDiv.innerHTML = `
+          <div class="empty-state">
+            <span class="material-icons">error_outline</span>
+            <p>搜索失败</p>
+            <p class="subtext">${error.message}</p>
+            <button class="button" style="margin-top: 1rem;" onclick="searchAnime()">重试</button>
+          </div>
+        `;
+        showSnackbar('搜索失败', 'error');
+      } finally {
+        searchButton.disabled = false;
+        searchButton.textContent = '搜索';
+      }
+    }
+
+    function renderSearchResults(results) {
+      const resultsDiv = document.getElementById('searchResults');
+      resultsDiv.innerHTML = results.map(item => `
+        <div class="card" onclick="goToEpisodes('${escapeHtml(item.url)}', '${escapeHtml(item.title)}')">
+          <div class="card-title">${escapeHtml(item.title)}</div>
+          <div class="card-subtitle">
+            <span class="material-icons">movie</span>
+            ${item.status ? `<span>${escapeHtml(item.status)}</span>` : ''}
+            ${item.year ? `<span>${escapeHtml(item.year)}</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function goToEpisodes(url, title) {
+      window.location.hash = `episodes/${encodeURIComponent(url)}`;
+    }
+
+    async function showEpisodesPage(url) {
+      document.getElementById('episodesPage').classList.remove('hidden');
+      document.getElementById('appTitle').textContent = '加载中...';
+      document.getElementById('backToTop').classList.remove('hidden');
+
+      const chipsDiv = document.getElementById('channelChips');
+      const listDiv = document.getElementById('episodesList');
+      
+      chipsDiv.innerHTML = '';
+      listDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载剧集中...</p></div>';
+
+      try {
+        const response = await fetch(`${API_BASE}/api/episodes?url=${encodeURIComponent(url)}`);
+        const data = await response.json();
+
+        if (data.success && data.channels && data.channels.length > 0) {
+          currentData.channels = data.channels;
+          currentData.currentAnime = { url: url, title: data.title };
+          
+          if (data.channels.length > 1) {
+            chipsDiv.innerHTML = data.channels.map((channel, index) => `
+              <button class="chip ${index === 0 ? 'selected' : ''}" 
+                      onclick="switchChannel(${index})">
+                ${escapeHtml(channel.channel)} (${channel.count})
+              </button>
+            `).join('');
+          }
+
+          renderEpisodes(0);
+          document.getElementById('appTitle').textContent = data.title || '选择剧集';
+          showSnackbar(`共 ${data.totalEpisodes} 集`, 'success');
+        } else {
+          listDiv.innerHTML = `
+            <div class="empty-state">
+              <span class="material-icons">tv_off</span>
+              <p>没有找到剧集</p>
+              <button class="button" style="margin-top: 1rem;" onclick="history.back()">返回</button>
+            </div>
+          `;
+          showSnackbar('没有找到剧集', 'warning');
+        }
+      } catch (error) {
+        console.error('加载剧集失败:', error);
+        listDiv.innerHTML = `
+          <div class="empty-state">
+            <span class="material-icons">error_outline</span>
+            <p>加载失败</p>
+            <p class="subtext">${error.message}</p>
+            <button class="button" style="margin-top: 1rem;" onclick="history.back()">返回</button>
+          </div>
+        `;
+        showSnackbar('加载失败', 'error');
+      }
+    }
+
+    function switchChannel(index) {
+      currentData.currentChannel = index;
+      
+      document.querySelectorAll('.chip').forEach((chip, i) => {
+        chip.classList.toggle('selected', i === index);
+      });
+
+      renderEpisodes(index);
+    }
+
+    function renderEpisodes(channelIndex) {
+      const channel = currentData.channels[channelIndex];
+      const listDiv = document.getElementById('episodesList');
+
+      if (!channel || !channel.episodes) {
+        listDiv.innerHTML = `
+          <div class="empty-state">
+            <span class="material-icons">tv_off</span>
+            <p>该频道暂无剧集</p>
+          </div>
+        `;
+        return;
+      }
+
+      listDiv.innerHTML = channel.episodes.map(episode => `
+        <div class="list-item" onclick="playVideo('${escapeHtml(episode.url)}', '${escapeHtml(episode.name)}')">
+          <span class="material-icons">play_circle_filled</span>
+          <div class="list-item-text">
+            <div class="list-item-title">${escapeHtml(episode.name)}</div>
+            <div class="list-item-subtitle">第 ${escapeHtml(episode.sort)} 集</div>
+          </div>
+          <span class="material-icons">chevron_right</span>
+        </div>
+      `).join('');
+    }
+
+    function playVideo(url, title) {
+      if (hlsInstance) {
+        hlsInstance.destroy();
+        hlsInstance = null;
+      }
+      
+      window.location.hash = `video/${encodeURIComponent(url)}`;
+      document.getElementById('videoTitle').textContent = title;
+      document.getElementById('videoInfo').textContent = '正在加载视频...';
+    }
+
+    async function showVideoPage(url) {
+      document.getElementById('videoPage').classList.remove('hidden');
+      document.getElementById('appTitle').textContent = '播放中';
+      document.getElementById('backToTop').classList.add('hidden');
+
+      const videoPlayer = document.getElementById('videoPlayer');
+      videoPlayer.src = '';
+
+      try {
+        const response = await fetch(`${API_BASE}/api/video?url=${encodeURIComponent(url)}`);
+        const data = await response.json();
+
+        if (data.success && data.videoUrl) {
+          await playVideoWithHLS(data.videoUrl);
+          document.getElementById('videoInfo').textContent = `视频类型: ${data.type} | 来源: ${data.source}`;
+          showSnackbar('开始播放', 'success');
+        } else {
+          document.getElementById('videoInfo').textContent = '无法获取视频地址';
+          showSnackbar(data.error || '无法获取视频地址', 'error');
+        }
+      } catch (error) {
+        console.error('获取视频失败:', error);
+        document.getElementById('videoInfo').textContent = '获取视频失败: ' + error.message;
+        showSnackbar('获取视频失败', 'error');
+      }
+    }
+
+    async function playVideoWithHLS(videoUrl) {
+      const video = document.getElementById('videoPlayer');
+      
+      await loadHLS();
+      
+      if (Hls.isSupported()) {
+        if (hlsInstance) {
+          hlsInstance.destroy();
+        }
+        
+        hlsInstance = new Hls({
+          debug: false,
+          enableWorker: true,
+          lowLatencyMode: true
+        });
+        
+        hlsInstance.loadSource(videoUrl);
+        hlsInstance.attachMedia(video);
+        
+        hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+          video.play().catch(e => {
+            console.warn('自动播放失败:', e);
+            showSnackbar('点击播放按钮开始观看', 'warning');
+          });
+        });
+        
+        hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+          if (data.fatal) {
+            switch(data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                showSnackbar('网络错误，正在重试...', 'warning');
+                hlsInstance.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                showSnackbar('媒体错误，正在恢复...', 'warning');
+                hlsInstance.recoverMediaError();
+                break;
+              default:
+                showSnackbar('播放出错，请刷新重试', 'error');
+                hlsInstance.destroy();
+                break;
+            }
+          }
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = videoUrl;
+        video.play().catch(e => {
+          showSnackbar('点击播放按钮开始观看', 'warning');
+        });
+      } else {
+        throw new Error('浏览器不支持HLS播放');
+      }
+    }
+
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showSnackbar(message, type = '') {
+      const snackbar = document.getElementById('snackbar');
+      snackbar.textContent = message;
+      snackbar.className = 'snackbar';
+      snackbar.classList.add(type, 'show');
+      
+      setTimeout(() => {
+        snackbar.classList.remove('show');
+        setTimeout(() => snackbar.classList.remove(type), 300);
+      }, 3000);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
