@@ -1,15 +1,4 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-  <title>The Anime Viewer - 动漫观看</title>
-  <meta name="description" content="在线动漫观看平台，提供流畅的观影体验">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-  <link rel="preload" href="https://cdn.jsdmirror.com/npm/hls.js@latest" as="script">
-  <link rel="manifest" href="./manifest.json">
-  <style>
+<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"><title>The Anime Viewer - 动漫观看</title><meta name="description" content="在线动漫观看平台，提供流畅的观影体验"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&amp;display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"><link rel="preload" href="https://cdn.jsdmirror.com/npm/hls.js@latest" as="script"><link rel="manifest" href="./manifest.json"><style>
     * {
       margin: 0;
       padding: 0;
@@ -126,7 +115,6 @@
       transform: scale(0.95);
     }
 
-    /* 修复搜索区域 */
     .search-container {
       margin-top: 80px;
       padding: 1rem;
@@ -213,7 +201,6 @@
       cursor: not-allowed;
     }
 
-    /* 搜索历史 */
     .search-history {
       margin-top: 1rem;
       background: var(--md-sys-color-surface);
@@ -260,7 +247,6 @@
       font-size: 1rem;
     }
 
-    /* 移除图片区域的卡片样式 */
     .card-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -566,6 +552,130 @@
       display: none !important;
     }
 
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      max-width: 400px;
+      background: var(--md-sys-color-surface);
+      box-shadow: var(--shadow-xl);
+      z-index: 1500;
+      transform: translateX(100%);
+      transition: transform var(--transition-normal);
+    }
+
+    .settings-panel:not(.hidden) {
+      transform: translateX(0);
+    }
+
+    .settings-content {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .settings-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+      border-bottom: 1px solid var(--md-sys-color-surface-variant);
+    }
+
+    .settings-header h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .settings-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+
+    .setting-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+      background: var(--md-sys-color-surface-variant);
+      border-radius: var(--radius-lg);
+      margin-bottom: 0.75rem;
+      gap: 1rem;
+    }
+
+    .setting-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .setting-title {
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .setting-description {
+      font-size: 0.875rem;
+      color: var(--md-sys-color-on-surface-variant);
+      line-height: 1.4;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 52px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--md-sys-color-surface-variant);
+      transition: var(--transition-normal);
+      border-radius: 34px;
+      border: 2px solid var(--md-sys-color-on-surface-variant);
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 2px;
+      bottom: 2px;
+      background-color: var(--md-sys-color-on-surface-variant);
+      transition: var(--transition-normal);
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--md-sys-color-primary);
+      border-color: var(--md-sys-color-primary);
+    }
+
+    input:checked + .slider:before {
+      background-color: var(--md-sys-color-on-primary);
+      transform: translateX(24px);
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px var(--md-sys-color-primary);
+    }
+
     @media (max-width: 768px) {
       .search-container {
         margin-top: 72px;
@@ -577,84 +687,12 @@
         gap: 0.75rem;
         padding: 0.75rem;
       }
+
+      .settings-panel {
+        max-width: 100%;
+      }
     }
-  </style>
-</head>
-<body>
-  <div id="skeleton" style="position: fixed; inset: 0; background: var(--md-sys-color-background); z-index: 2000;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
-      <div class="spinner"></div>
-      <p style="margin-top: 1rem; color: var(--md-sys-color-on-surface-variant);">加载中...</p>
-    </div>
-  </div>
-
-  <header class="top-app-bar">
-    <button class="icon-button" onclick="goHome()" aria-label="返回首页">
-      <span class="material-icons">home</span>
-    </button>
-    <h1 id="appTitle">Anime Viewer</h1>
-  </header>
-
-  <main id="app">
-    <div id="searchPage">
-      <div class="search-container">
-        <div class="search-field">
-          <span class="material-icons search-icon">search</span>
-          <input type="search" id="searchInput" placeholder="搜索动漫..." 
-                 onkeypress="handleSearchKeypress(event)" 
-                 autocomplete="off">
-          <button class="button" onclick="searchAnime()" id="searchButton">
-            搜索
-          </button>
-        </div>
-        
-        <div id="searchHistory" class="search-history hidden">
-          <h3>
-            搜索历史
-            <button class="icon-button" onclick="clearHistory()" style="min-width: auto; min-height: auto; padding: 0.25rem;">
-              <span class="material-icons" style="font-size: 1.125rem;">delete</span>
-            </button>
-          </h3>
-          <div id="historyChips" class="history-chips"></div>
-        </div>
-      </div>
-      
-      <div id="searchResults" class="card-grid">
-        <div class="empty-state">
-          <span class="material-icons">search</span>
-          <p>输入关键词搜索动漫</p>
-          <p class="subtext">支持中文、日文、英文搜索</p>
-        </div>
-      </div>
-    </div>
-
-    <div id="episodesPage" class="hidden">
-      <div style="margin-top: 80px;">
-        <div id="channelChips" class="chip-container"></div>
-        <div id="episodesList" class="list-container"></div>
-      </div>
-    </div>
-
-    <div id="videoPage" class="hidden">
-      <div class="video-container" style="margin-top: 80px;">
-        <div class="video-player">
-          <video id="videoPlayer" controls playsinline preload="metadata"></video>
-        </div>
-        <div class="video-info-card">
-          <h2 id="videoTitle">正在播放</h2>
-          <p id="videoInfo">加载中...</p>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <button class="fab hidden" onclick="scrollToTop()" id="backToTop">
-    <span class="material-icons">arrow_upward</span>
-  </button>
-
-  <div id="snackbar" class="snackbar"></div>
-
-  <script>
+  </style></head><body><div id="skeleton" style="position: fixed; inset: 0; background: var(--md-sys-color-background); z-index: 2000;"><div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;"><div class="spinner"></div><p style="margin-top: 1rem; color: var(--md-sys-color-on-surface-variant);">加载中...</p></div></div><header class="top-app-bar"><button class="icon-button" onclick="goHome()" aria-label="返回首页"><span class="material-icons">home</span></button><h1 id="appTitle">Anime Viewer</h1><button class="icon-button" onclick="toggleSettings()" aria-label="设置"><span class="material-icons">settings</span></button></header><div id="settingsPanel" class="settings-panel hidden"><div class="settings-content"><div class="settings-header"><h2>播放设置</h2><button class="icon-button" onclick="toggleSettings()"><span class="material-icons">close</span></button></div><div class="settings-body"><div class="setting-item"><div class="setting-info"><div class="setting-title">CORS绕过模式</div><div class="setting-description">使用Blob方式绕过跨域限制（可能更慢）</div></div><label class="switch"><input type="checkbox" id="corsBypassToggle" onchange="toggleCorsBypass()"><span class="slider"></span></label></div><div class="setting-item"><div class="setting-info"><div class="setting-title">备用域名</div><div class="setting-description">替换为备用服务器域名</div></div><label class="switch"><input type="checkbox" id="altDomainToggle" onchange="toggleAltDomain()"><span class="slider"></span></label></div></div></div></div><main id="app"><div id="searchPage"><div class="search-container"><div class="search-field"><span class="material-icons search-icon">search</span><input type="search" id="searchInput" placeholder="搜索动漫..." onkeypress="handleSearchKeypress(event)" autocomplete="off"><button class="button" onclick="searchAnime()" id="searchButton">搜索</button></div><div id="searchHistory" class="search-history hidden"><h3>搜索历史<button class="icon-button" onclick="clearHistory()" style="min-width: auto; min-height: auto; padding: 0.25rem;"><span class="material-icons" style="font-size: 1.125rem;">delete</span></button></h3><div id="historyChips" class="history-chips"></div></div></div><div id="searchResults" class="card-grid"><div class="empty-state"><span class="material-icons">search</span><p>输入关键词搜索动漫</p><p class="subtext">支持中文、日文、英文搜索</p></div></div></div><div id="episodesPage" class="hidden"><div style="margin-top: 80px;"><div id="channelChips" class="chip-container"></div><div id="episodesList" class="list-container"></div></div></div><div id="videoPage" class="hidden"><div class="video-container" style="margin-top: 80px;"><div class="video-player"><video id="videoPlayer" controls playsinline preload="metadata"></video></div><div class="video-info-card"><h2 id="videoTitle">正在播放</h2><p id="videoInfo">加载中...</p></div></div></div></main><button class="fab hidden" onclick="scrollToTop()" id="backToTop"><span class="material-icons">arrow_upward</span></button><div id="snackbar" class="snackbar"></div><script>
     const API_BASE = 'https://anigirl.dahi.edu.eu.org';
     let currentData = {
       searchResults: [],
@@ -664,6 +702,11 @@
     };
     let hlsInstance = null;
     let searchHistory = JSON.parse(localStorage.getItem('animeSearchHistory') || '[]');
+    
+    let settings = {
+      corsBypass: localStorage.getItem('corsBypass') === 'true',
+      altDomain: localStorage.getItem('altDomain') === 'true'
+    };
 
     function loadHLS() {
       return new Promise((resolve, reject) => {
@@ -691,7 +734,37 @@
       window.addEventListener('hashchange', handleRoute);
       window.addEventListener('scroll', handleScroll);
       renderSearchHistory();
+      
+      document.getElementById('corsBypassToggle').checked = settings.corsBypass;
+      document.getElementById('altDomainToggle').checked = settings.altDomain;
     });
+
+    function toggleSettings() {
+      const panel = document.getElementById('settingsPanel');
+      panel.classList.toggle('hidden');
+    }
+
+    function toggleCorsBypass() {
+      settings.corsBypass = document.getElementById('corsBypassToggle').checked;
+      localStorage.setItem('corsBypass', settings.corsBypass);
+      showSnackbar(settings.corsBypass ? '已启用CORS绕过模式' : '已关闭CORS绕过模式', 'success');
+    }
+
+    function toggleAltDomain() {
+      settings.altDomain = document.getElementById('altDomainToggle').checked;
+      localStorage.setItem('altDomain', settings.altDomain);
+      showSnackbar(settings.altDomain ? '已启用备用域名' : '已关闭备用域名', 'success');
+    }
+
+    function processVideoUrl(url) {
+      if (!url) return url;
+      
+      if (settings.altDomain) {
+        return url.replace(/ai\.girigirilove\.net/g, 'animegirlair.dahi.edu.eu.org');
+      }
+      
+      return url;
+    }
 
     function handleScroll() {
       const backToTop = document.getElementById('backToTop');
@@ -992,7 +1065,19 @@
     async function playVideoWithHLS(videoUrl) {
       const video = document.getElementById('videoPlayer');
       
+      videoUrl = processVideoUrl(videoUrl);
+      
       await loadHLS();
+      
+      if (settings.corsBypass) {
+        try {
+          await playWithCorsBypass(videoUrl, video);
+          return;
+        } catch (error) {
+          console.error('CORS绕过模式失败，尝试标准模式:', error);
+          showSnackbar('CORS绕过失败，尝试标准播放...', 'warning');
+        }
+      }
       
       if (Hls.isSupported()) {
         if (hlsInstance) {
@@ -1043,6 +1128,102 @@
       }
     }
 
+    async function playWithCorsBypass(videoUrl, video) {
+      showSnackbar('使用CORS绕过模式加载...', 'warning');
+      
+      if (videoUrl.includes('.m3u8')) {
+        if (hlsInstance) {
+          hlsInstance.destroy();
+        }
+        
+        hlsInstance = new Hls({
+          debug: false,
+          enableWorker: true,
+          lowLatencyMode: true,
+          xhrSetup: function(xhr, url) {
+            xhr.withCredentials = false;
+          }
+        });
+        
+        const defaultLoader = hlsInstance.config.loader;
+        
+        class CustomLoader extends defaultLoader {
+          load(context, config, callbacks) {
+            const url = processVideoUrl(context.url);
+            
+            fetch(url, { 
+              mode: 'no-cors',
+              cache: 'default'
+            })
+            .then(response => response.blob())
+            .then(blob => {
+              const reader = new FileReader();
+              reader.onload = function() {
+                callbacks.onSuccess({
+                  url: url,
+                  data: this.result
+                }, { url: url }, context);
+              };
+              reader.onerror = function() {
+                callbacks.onError({
+                  code: 0,
+                  text: 'Blob读取失败'
+                }, context);
+              };
+              reader.readAsArrayBuffer(blob);
+            })
+            .catch(error => {
+              fetch(url)
+              .then(response => response.arrayBuffer())
+              .then(data => {
+                callbacks.onSuccess({
+                  url: url,
+                  data: data
+                }, { url: url }, context);
+              })
+              .catch(err => {
+                callbacks.onError({
+                  code: 0,
+                  text: err.message
+                }, context);
+              });
+            });
+          }
+        }
+        
+        hlsInstance.config.loader = CustomLoader;
+        hlsInstance.loadSource(videoUrl);
+        hlsInstance.attachMedia(video);
+        
+        hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+          video.play().catch(e => {
+            console.warn('自动播放失败:', e);
+            showSnackbar('点击播放按钮开始观看', 'warning');
+          });
+        });
+        
+        hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+          if (data.fatal) {
+            throw new Error('CORS绕过模式播放失败');
+          }
+        });
+        
+      } else {
+        const response = await fetch(videoUrl, { 
+          mode: 'no-cors'
+        });
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        
+        video.src = blobUrl;
+        video.play().catch(e => {
+          showSnackbar('点击播放按钮开始观看', 'warning');
+        });
+        
+        video.addEventListener('ended', () => URL.revokeObjectURL(blobUrl), { once: true });
+      }
+    }
+
     function scrollToTop() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1065,6 +1246,4 @@
       div.textContent = text;
       return div.innerHTML;
     }
-  </script>
-</body>
-</html>
+  </script></body></html>
